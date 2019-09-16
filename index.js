@@ -9,7 +9,8 @@ const {
   GraphQLList,
   GraphQLNonNull,
   GraphQLID,
-  GraphQLString, GraphQLInt,
+  GraphQLString,
+  GraphQLInt,
   GraphQLBoolean,
 } = require('graphql');
 const { getVideoById, getVideos, createVideo } = require('./src/data');
@@ -53,7 +54,7 @@ const { connectionType: VideoConnection } = connectionDefinitions({
     totalCount: {
       type: GraphQLInt,
       description: 'A count of the total number of objects in this connection.',
-      resolve: (conn) => {
+      resolve: conn => {
         return conn.edges.length;
       },
     },
@@ -68,10 +69,7 @@ const queryType = new GraphQLObjectType({
     videos: {
       type: VideoConnection,
       args: connectionArgs,
-      resolve: (_, args) => connectionFromPromisedArray(
-        getVideos(),
-        args
-      ),
+      resolve: (_, args) => connectionFromPromisedArray(getVideos(), args),
     },
     video: {
       type: videoType,
@@ -109,11 +107,12 @@ const videoMutation = mutationWithClientMutationId({
       type: videoType,
     },
   },
-  mutateAndGetPayload: (args) => new Promise((resolve, reject) => {
-    Promise.resolve(createVideo(args))
-      .then((video) => resolve({ video }))
-      .catch(reject);
-  }),
+  mutateAndGetPayload: args =>
+    new Promise((resolve, reject) => {
+      Promise.resolve(createVideo(args))
+        .then(video => resolve({ video }))
+        .catch(reject);
+    }),
 });
 
 const mutationType = new GraphQLObjectType({
@@ -129,10 +128,13 @@ const schema = new GraphQLSchema({
   mutation: mutationType,
 });
 
-server.use('/graphql', graphqlHTTP({
-  schema,
-  graphiql: true,
-}));
+server.use(
+  '/graphql',
+  graphqlHTTP({
+    schema,
+    graphiql: true,
+  }),
+);
 
 server.listen(PORT, () => {
   console.log(`Listening on http://localhost:${PORT}`);
